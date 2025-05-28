@@ -18,21 +18,31 @@ uint16_t read16(const unsigned char *data) {
  * @param size The number of bits to read. Default is 1. Max is 32
  * @return The value read from the memory.
  */
-int memread(uint8_t *stack, int pointer, int size) {
+int stackread(uint8_t *stack, int pointer, int size) {
   int value = 0;
   for (int i = 0; i < size; i++) {
     value |= ((stack[(pointer + i) / 8] >> ((pointer + i) % 8)) & 1) << (size - 1 - i);
   }
+
+  #ifdef DEBUG
+  Serial.print(">stackread: pointer=");
+  Serial.print(pointer);
+  Serial.print(", value=");
+  Serial.print(value, BIN);
+  Serial.print(", size=");
+  Serial.println(size);
+  #endif
+
   return value;
 }
-int memread(uint8_t *stack, int pointer) {
-  return memread(stack, pointer, 1);
+int stackread(uint8_t *stack, int pointer) {
+  return stackread(stack, pointer, 1);
 }
-int memread_pgrm(uint8_t *stack, int offset, int size) {
-  return memread(stack, read16(PLD_BYTECODE, offset), size);
+int stackread_pgrm(uint8_t *stack, int offset, int size) {
+  return stackread(stack, read16(PLD_BYTECODE, offset), size);
 }
-int memread_pgrm(uint8_t *stack, int offset) {
-  return memread(stack, read16(PLD_BYTECODE, offset));
+int stackread_pgrm(uint8_t *stack, int offset) {
+  return stackread(stack, read16(PLD_BYTECODE, offset));
 }
 
 /**
@@ -41,7 +51,7 @@ int memread_pgrm(uint8_t *stack, int offset) {
  * @param value The value to write. (in bits)
  * @param size The number of bits to write. Default is 1. Max is 32
  */
-void memset(uint8_t *stack, int pointer, int value, int size) {
+void stackset(uint8_t *stack, int pointer, int value, int size) {
   for (int i = 0; i < size; i++) {
     if (value & (1 << (size - 1 - i))) {
       stack[(pointer + i) / 8] |= (1 << ((pointer + i) % 8));
@@ -49,13 +59,22 @@ void memset(uint8_t *stack, int pointer, int value, int size) {
       stack[(pointer + i) / 8] &= ~(1 << ((pointer + i) % 8));
     }
   }
+
+  #ifdef DEBUG
+  Serial.print(">stackset: pointer=");
+  Serial.print(pointer);
+  Serial.print(", value=");
+  Serial.print(value, BIN);
+  Serial.print(", size=");
+  Serial.println(size);
+  #endif
 }
-void memset(uint8_t *stack, int pointer, int value) {
-  memset(stack, pointer, value, 1);
+void stackset(uint8_t *stack, int pointer, int value) {
+  stackset(stack, pointer, value, 1);
 }
-void memset_pgrm(uint8_t *stack, int offset, int value, int size) {
-  memset(stack, read16(PLD_BYTECODE, offset), value, size);
+void stackset_pgrm(uint8_t *stack, int offset, int value, int size) {
+  stackset(stack, read16(PLD_BYTECODE, offset), value, size);
 }
-void memset_pgrm(uint8_t *stack, int offset, int value) {
-  memset(stack, read16(PLD_BYTECODE, offset), value);
+void stackset_pgrm(uint8_t *stack, int offset, int value) {
+  stackset(stack, read16(PLD_BYTECODE, offset), value);
 }
