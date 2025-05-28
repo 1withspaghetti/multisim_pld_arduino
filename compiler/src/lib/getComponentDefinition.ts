@@ -286,10 +286,22 @@ export default function getComponentDefinition(
             ["A", "Y"]
         )));
         params.addPointer(alloc(1)); // 1 bit for the buffer
+    } else if (t === "MUX2_1_NI") {
+        id = 72;
+        params.addPointers(getPointersForSignals(getSignalsAtPorts(
+            ["A", "B", "S", "G", "Y"]
+        )));
     } else if (t === "FF_D_CO_NI") {
         id = 80;
         params.addPointers(getPointersForSignals(getSignalsAtPorts(
             ["D", "CLK", "Q", "Qneg"]
+        )));
+        params.addPointer(alloc(1)); // 1 bit for the last clock value
+        params.addPointer(alloc(1)); // 1 bit for the current state
+    } else if (t === "FF_JK_PSCLR_CO_NI") {
+        id = 81;
+        params.addPointers(getPointersForSignals(getSignalsAtPorts(
+            ["J", "K", "CLK", "PR", "CLR", "Q", "Qneg"]
         )));
         params.addPointer(alloc(1)); // 1 bit for the last clock value
         params.addPointer(alloc(1)); // 1 bit for the current state

@@ -435,6 +435,14 @@ uint16_t execComponent(uint8_t *s, uint8_t t, uint16_t offset) {
         stackset_pgrm(s, offset+2, !stackread_pgrm(s, offset+4));
         stackset_pgrm(s, offset+4, stackread_pgrm(s, offset));
         return 6;
+    case 72: // MUX 2x1
+        // Select between two inputs based on the selector
+        if (stackread_pgrm(s, offset+4) == 0 && !stackread_pgrm(s, offset+6)) {
+            stackset_pgrm(s, offset+8, stackread_pgrm(s, offset));
+        } else {
+            stackset_pgrm(s, offset+8, stackread_pgrm(s, offset+2));
+        }
+        return 8;
     case 80: // DFF
         // Rising edge of clock
         if (stackread_pgrm(s, offset+2) == 1 && stackread_pgrm(s, offset+8) == 0) {
@@ -447,6 +455,25 @@ uint16_t execComponent(uint8_t *s, uint8_t t, uint16_t offset) {
         stackset_pgrm(s, offset+4, stackread_pgrm(s, offset+10));
         stackset_pgrm(s, offset+6, !stackread_pgrm(s, offset+10));
         return 12;
+    case 81: // JK FF w/ PR and CLR
+        // Check for preset and clear (async, outside of clock) (active low)
+        if (stackread_pgrm(s, offset+6) == 0) stackset_pgrm(s, offset+16, 1);
+        if (stackread_pgrm(s, offset+8) == 0) stackset_pgrm(s, offset+16, 0);
+
+        // Rising edge of clock
+        if (stackread_pgrm(s, offset+4) == 1 && stackread_pgrm(s, offset+14) == 0) {
+            int j = stackread_pgrm(s, offset);
+            int k = stackread_pgrm(s, offset+2);
+            if (j == 1 && k == 0) stackset_pgrm(s, offset+16, 1);
+            else if (j == 0 && k == 1) stackset_pgrm(s, offset+16, 0);
+            else if (j == 1 && k == 1) stackset_pgrm(s, offset+16, !stackread_pgrm(s, offset+16));
+        }
+        // Update last value of clock
+        stackset_pgrm(s, offset+14, stackread_pgrm(s, offset+4));
+        // Update Q and Qneg
+        stackset_pgrm(s, offset+10, stackread_pgrm(s, offset+16));
+        stackset_pgrm(s, offset+12, !stackread_pgrm(s, offset+16));
+        return 18;
     case 90: // DEC_BCD_7
     {
         // Ignoring LT, RBI, and BI
