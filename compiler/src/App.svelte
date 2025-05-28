@@ -36,8 +36,8 @@
     })
     const cpp_code = $derived.by(() => {
         if (!bytecode) return '';
-        const hexArray = Array.from(new Uint8Array(bytecode)).map(b => "0b"+b.toString(16).padStart(2, '0'))
-        return `[${hexArray.join(', ')}]`;
+        const hexArray = Array.from(new Uint8Array(bytecode)).map(b => "0x"+b.toString(16).padStart(2, '0'))
+        return `{ ${hexArray.join(', ')} }`;
     })
     
     function copyToClipboard(str: string) {

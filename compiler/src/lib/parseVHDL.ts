@@ -1,9 +1,9 @@
 const ENTITY_CODE_REGEX = /entity (?<name>\w+) is(?<code>.+)end \k<name>;/si;
 const PORT_FUNCTION_CODE_REGEX = /port ?\((?<code>.+)\);/si;
-const PORT_REGEX = /(?<name>\w+) ?: ?(?<direction>in|out) (?<type>.+)[;\n]/gi;
+const PORT_REGEX = /(?<name>\w+) ?: ?(?<direction>in|out) (?<type>\w+)/gi;
 
 const ARCHITECTURE_CODE_REGEX = /architecture (?<name>\w+) of (?<entityName>\w+) is(?<definitions>.+)begin(?<code>.+)end \k<name>;/si;
-const SIGNALS_REGEX = /signal +(?<id>.+) +: +(?<type>.+);/gi
+const SIGNALS_REGEX = /signal +(?<id>.+) +: +(?<type>\w+);/gi
 const COMPONENTS_REGEX = /(?<id>\w+)\s+:\s+(?<type>\w+)\s+port\s+map\((?<mapCode>.+)\);/gi
 const COMPONENTS_MAP_REGEX = /(?<port>\w+)\s*=>\s*(?<signal>[^\s,;()]+)/gi;
 

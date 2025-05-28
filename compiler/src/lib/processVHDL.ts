@@ -1,6 +1,33 @@
 import getComponentDefinition from "./getComponentDefinition";
 import parseVHDL from "./parseVHDL";
 
+// Key is the id of the entity port, value is the location in the gpio on the stack
+const IO_ID_TO_GPIO: Record<string, number> = {
+    "BTN0": 40,
+    "BTN1": 41,
+    "LED1": 11,
+    "LED2": 12,
+    "LED3": 13,
+    "LED4": 14,
+    "SEGA_PIO09": 4,
+    "SEGB_PIO08": 5,
+    "SEGC_PIO07": 6,
+    "SEGD_PIO06": 7,
+    "SEGE_PIO05": 8,
+    "SEGF_PIO04": 9,
+    "SEGG_PIO03": 10,
+    "DIG0_PIO01": 15,
+    "DIG1_PIO02": 16,
+    "Ext_Clk_In_PIO16": 21,
+}
+export function getGPIOByPortName(portName: string) {
+    const gpio = IO_ID_TO_GPIO[portName];
+    if (gpio === undefined) {
+        throw new Error(`Unknown port name ${portName} for GPIO lookup`);
+    }
+    return gpio;
+}
+
 export default function processVHDL(code: string) {
 
     // Parse the VHDL code and get all the components
@@ -36,11 +63,15 @@ export default function processVHDL(code: string) {
     const bufferSize = 
         2 + // 2 bytes for the size of the buffer (in bytes)
         2 + // 2 bytes for the stack length (in bits)
+        2 + // 2 bytes for the number of GPIOs to init
+        entity.ports.length * 2 + // 2 bytes for each GPIO (1 byte for the GPIO number, 1 byte for the type)
         componentCode.reduce((acc, code) => acc + ( // Bytes for each component
             1 + // 1 byte for the component type
             code.paramLength // bytes for the parameters
         ), 0)
     console.log("Buffer size", bufferSize);
+    console.log("Stack size", stackSize);
+    console.log("GPIO size", entity.ports.length * 2);
     
 
     const buffer = new ArrayBuffer(bufferSize);
@@ -48,7 +79,18 @@ export default function processVHDL(code: string) {
 
     view.setUint16(0, bufferSize); // Set the size of the buffer
     view.setUint16(2, stackSize); // Set the size of the stack
-    let offset = 4; // Start after the size of the buffer
+    view.setUint16(4, entity.ports.length); // Set the number of GPIOs to init
+    let offset = 6; // Start after the size of the buffer
+    // Write the GPIOs to the buffer
+    for (let i = 0; i < entity.ports.length; i++) {
+        const port = entity.ports[i];
+        view.setUint8(offset, getGPIOByPortName(port.name)); // Set the GPIO number
+        offset += 1; // Move to the next byte
+        view.setUint8(offset, port.direction.toLowerCase().includes("in") ? 0x01 : 0x03); // Set the input (1) or output (3) type
+        offset += 1; // Move to the next bytes
+        console.log("GPIO", port.name, "->", getGPIOByPortName(port.name), "direction", port.direction);
+    }
+    // Write the component code to the buffer
     for (const component of componentCode) {
         view.setUint8(offset, component.type); // Set the type of the component
         offset += 1; // Move to the next byte

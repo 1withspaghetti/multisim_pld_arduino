@@ -1,25 +1,5 @@
+import { getGPIOByPortName } from "./processVHDL";
 import type { Component } from "./types";
-
-
-// Key is the id of the entity port, value is the location in the gpio on the stack
-const IO_ID_TO_GPIO: Record<string, number> = {
-    "BTN0": 23,
-    "BTN1": 22,
-    "LED1": 15,
-    "LED2": 2,
-    "LED3": 4,
-    "LED4": 16,
-    "SEGA_PIO09": 33,
-    "SEGB_PIO08": 25,
-    "SEGC_PIO07": 26,
-    "SEGD_PIO06": 27,
-    "SEGE_PIO05": 14,
-    "SEGF_PIO04": 12,
-    "SEGG_PIO03": 13,
-    "DIG0_PIO01": 34,
-    "DIG1_PIO02": 35,
-    "Ext_Clk_In_PIO16": 21,
-}
 
 export default function getComponentDefinition(
     component: Component, 
@@ -57,16 +37,14 @@ export default function getComponentDefinition(
     if (t === "AUTO_IBUF") { // GPIO input
         id = 1;
         const [I, O] = getSignalsAtPorts(["I", "O"]);
-        const GPIO = IO_ID_TO_GPIO[I];
-        if (GPIO === undefined) throw new Error("GPIO not found for signal " + I);
+        const GPIO = getGPIOByPortName(I);
 
         params.add(GPIO, 1); // 1 byte - GPIO
         params.addPointer(getPointerForSignal(O)); // pointer to signal
     } else if (t === "AUTO_OBUF") {
         id = 2;
         const [I, O] = getSignalsAtPorts(["I", "O"]);
-        const GPIO = IO_ID_TO_GPIO[O];
-        if (GPIO === undefined) throw new Error("GPIO not found for signal " + O);
+        const GPIO = getGPIOByPortName(O);
 
         params.addPointer(getPointerForSignal(I)); // pointer to signal
         params.add(GPIO, 1); // 1 byte - GPIO
